@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Ma Bibliothèque — POS</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f3f4f6;color:#111827}
+header{background:#111827;color:white;padding:16px;position:sticky;top:0;z-index:5}
+h1{font-size:21px;margin:0 0 12px}.tabs{display:flex;gap:8px;overflow:auto}.tabs button{border:0;border-radius:10px;padding:10px 14px;background:#374151;color:#fff;white-space:nowrap}
+.tabs button.active{background:#2563eb}.page{padding:16px;max-width:1100px;margin:auto}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.card{background:white;border-radius:14px;padding:16px;box-shadow:0 2px 10px #00000010}.stat{font-size:25px;font-weight:700;margin-top:5px}
+input,select{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:10px;font-size:16px;background:white}button{cursor:pointer}
+.btn{border:0;border-radius:10px;padding:11px 14px;background:#2563eb;color:#fff;font-weight:600}.btn.gray{background:#6b7280}.btn.red{background:#dc2626}.btn.green{background:#16a34a}
+.row{display:flex;gap:10px;align-items:center}.row>*{flex:1}.actions{display:flex;gap:6px;flex-wrap:wrap}
+table{width:100%;border-collapse:collapse;background:white;border-radius:12px;overflow:hidden}th,td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:14px}
+.hidden{display:none}.section{margin-bottom:16px}.muted{color:#6b7280;font-size:13px}.total{font-size:24px;font-weight:800}.cart-item{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #eee}
+@media(max-width:700px){.grid{grid-template-columns:repeat(2,1fr)}.row{flex-direction:column;align-items:stretch}.card{padding:13px}table{font-size:12px}th,td{padding:8px}.desktop{display:none}}
+</style>
+</head>
+<body>
+<header>
+<h1>📚 Ma Bibliothèque — POS</h1>
+<div class="tabs">
+<button data-tab="dashboard" class="active">Tableau</button>
+<button data-tab="caisse">Caisse</button>
+<button data-tab="stock">Stock</button>
+<button data-tab="clients">Clients</button>
+<button data-tab="fournisseurs">Fournisseurs</button>
+<button data-tab="backup">Sauvegarde</button>
+</div>
+</header>
+
+<main class="page">
+<section id="dashboard">
+<div class="grid">
+<div class="card">CA aujourd'hui<div class="stat" id="ca">0 DH</div></div>
+<div class="card">Bénéfice estimé<div class="stat" id="profit">0 DH</div></div>
+<div class="card">Ventes<div class="stat" id="salesCount">0</div></div>
+<div class="card">Produits<div class="stat" id="productCount">0</div></div>
+</div>
+<div class="card section" style="margin-top:12px"><b>Bienvenue 👋</b><p class="muted">Application locale pour gérer la caisse, le stock et les ventes.</p></div>
+</section>
+
+<section id="caisse" class="hidden">
+<div class="row">
+<div class="card">
+<h2>Caisse</h2>
+<div class="row">
+<input id="barcode" placeholder="Code-barres / référence" autofocus>
+<button class="btn" onclick="addByBarcode()">Ajouter</button>
+</div>
+<div style="margin-top:10px"><input id="productSearch" placeholder="Rechercher un produit..." oninput="renderSuggestions()"></div>
+<div id="suggestions" style="margin-top:8px"></div>
+</div>
+<div class="card">
+<h2>Panier</h2><div id="cart"></div>
+<div class="row" style="margin-top:12px"><div>Total</div><div class="total" id="cartTotal">0 DH</div></div>
+<div class="row" style="margin-top:10px"><input id="cash" type="number" placeholder="Espèces reçues"><button class="btn green" onclick="checkout()">Valider</button></div>
+<p id="change" class="muted"></p>
+</div>
+</div>
+</section>
+
+<section id="stock" class="hidden">
+<div class="card section"><h2>Ajouter / modifier un produit</h2>
+<div class="row"><input id="pName" placeholder="Nom"><input id="pBarcode" placeholder="Code-barres"><input id="pBuy" type="number" step="0.01" placeholder="Prix achat"><input id="pSell" type="number" step="0.01" placeholder="Prix vente"><input id="pQty" type="number" placeholder="Stock"></div>
+<div class="actions" style="margin-top:10px"><button class="btn" onclick="saveProduct()">Enregistrer</button><button class="btn gray" onclick="clearProductForm()">Annuler</button></div></div>
+<div class="card"><h2>Stock</h2><div id="stockTable"></div></div>
+</section>
+
+<section id="clients" class="hidden">
+<div class="card section"><h2>Clients / dettes</h2><div class="row"><input id="cName" placeholder="Nom du client"><input id="cPhone" placeholder="Téléphone"><input id="cDebt" type="number" placeholder="Dette"><button class="btn" onclick="addClient()">Ajouter</button></div></div>
+<div class="card"><div id="clientsTable"></div></div>
+</section>
+
+<section id="fournisseurs" class="hidden">
+<div class="card section"><h2>Fournisseurs</h2><div class="row"><input id="fName" placeholder="Nom"><input id="fPhone" placeholder="Téléphone"><button class="btn" onclick="addSupplier()">Ajouter</button></div></div>
+<div class="card"><div id="suppliersTable"></div></div>
+</section>
+
+<section id="backup" class="hidden">
+<div class="card"><h2>Sauvegarde</h2><p class="muted">Les données sont enregistrées sur cet appareil/navigateur.</p>
+<div class="actions"><button class="btn" onclick="exportData()">Exporter JSON</button><label class="btn gray">Importer JSON<input type="file" accept=".json" onchange="importData(event)" style="display:none"></label><button class="btn red" onclick="resetAll()">Tout effacer</button></div></div>
+</section>
+</main>
+
+<script>
+const KEY="ma_bibliotheque_pos_v22";
+let db=JSON.parse(localStorage.getItem(KEY)||'null')||{products:[],sales:[],clients:[],suppliers:[],cart:[]};
+let editId=null;
+function save(){localStorage.setItem(KEY,JSON.stringify(db));renderAll()}
+function money(n){return Number(n||0).toFixed(2)+" DH"}
+function tab(name){document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));document.getElementById(name).classList.remove("hidden");document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("active",b.dataset.tab===name));if(name==="caisse")document.getElementById("barcode").focus()}
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>tab(b.dataset.tab));
+
+function saveProduct(){
+ let name=pName.value.trim(), barcode=pBarcode.value.trim(), buy=+pBuy.value||0, sell=+pSell.value||0, qty=+pQty.value||0;
+ if(!name||!sell){alert("Nom et prix de vente obligatoires.");return}
+ if(editId){let p=db.products.find(x=>x.id===editId);Object.assign(p,{name,barcode,buy,sell,qty})}
+ else db.products.push({id:crypto.randomUUID(),name,barcode,buy,sell,qty});
+ editId=null;clearProductForm();save()
+}
+function editProduct(id){let p=db.products.find(x=>x.id===id);editId=id;pName.value=p.name;pBarcode.value=p.barcode;pBuy.value=p.buy;pSell.value=p.sell;pQty.value=p.qty;tab("stock")}
+function delProduct(id){if(confirm("Supprimer ce produit ?")){db.products=db.products.filter(p=>p.id!==id);save()}}
+function clearProductForm(){["pName","pBarcode","pBuy","pSell","pQty"].forEach(x=>document.getElementById(x).value="");editId=null}
+
+function addByBarcode(){let code=barcode.value.trim();let p=db.products.find(x=>x.barcode===code||x.name.toLowerCase()===code.toLowerCase());if(p)addCart(p.id);else alert("Produit introuvable.");barcode.value="";barcode.focus()}
+function addCart(id){let p=db.products.find(x=>x.id===id);if(!p||p.qty<=0){alert("Stock insuffisant.");return}let c=db.cart.find(x=>x.id===id);if(c){if(c.qty<p.qty)c.qty++}else db.cart.push({id,qty:1});renderCart()}
+function removeCart(id){db.cart=db.cart.filter(x=>x.id!==id);renderCart()}
+function changeQty(id,d){let c=db.cart.find(x=>x.id===id),p=db.products.find(x=>x.id===id);if(!c)return;c.qty=Math.max(1,Math.min(p.qty,c.qty+d));renderCart()}
+function cartTotal(){return db.cart.reduce((s,c)=>{let p=db.products.find(x=>x.id===c.id);return s+p.sell*c.qty},0)}
+function renderCart(){let el=document.getElementById("cart");el.innerHTML=db.cart.length?db.cart.map(c=>{let p=db.products.find(x=>x.id===c.id);return `<div class="cart-item"><div><b>${p.name}</b><br><span class="muted">${money(p.sell)} × ${c.qty}</span></div><div class="actions"><button onclick="changeQty('${c.id}',-1)">−</button><button onclick="changeQty('${c.id}',1)">+</button><button class="btn red" onclick="removeCart('${c.id}')">×</button></div></div>`}).join(""):"<p class='muted'>Panier vide</p>";cartTotalEl=cartTotal();document.getElementById("cartTotal").textContent=money(cartTotalEl)}
+function renderSuggestions(){let q=productSearch.value.toLowerCase();let ps=db.products.filter(p=>p.name.toLowerCase().includes(q)||p.barcode.includes(q)).slice(0,8);document.getElementById("suggestions").innerHTML=ps.map(p=>`<div class="card" style="padding:10px;margin:5px 0" onclick="addCart('${p.id}')"><b>${p.name}</b> — ${money(p.sell)} — stock ${p.qty}</div>`).join("")}
+function checkout(){let total=cartTotal();let cash=+document.getElementById("cash").value||0;if(!db.cart.length)return alert("Panier vide.");if(cash<total)return alert("Montant reçu insuffisant.");db.cart.forEach(c=>{let p=db.products.find(x=>x.id===c.id);p.qty-=c.qty});db.sales.push({id:crypto.randomUUID(),date:new Date().toISOString(),items:JSON.parse(JSON.stringify(db.cart)),total});db.cart=[];document.getElementById("cash").value="";document.getElementById("change").textContent="Monnaie : "+money(cash-total);save();renderCart();alert("Vente enregistrée.")}
+function renderStock(){document.getElementById("stockTable").innerHTML=`<table><tr><th>Produit</th><th>Code</th><th>Achat</th><th>Vente</th><th>Stock</th><th>Actions</th></tr>${db.products.map(p=>`<tr><td>${p.name}</td><td>${p.barcode}</td><td>${money(p.buy)}</td><td>${money(p.sell)}</td><td>${p.qty}</td><td><button onclick="editProduct('${p.id}')">Modifier</button> <button onclick="delProduct('${p.id}')">Supprimer</button></td></tr>`).join("")}</table>`}
+function addClient(){let n=cName.value.trim();if(!n)return;db.clients.push({id:crypto.randomUUID(),name:n,phone:cPhone.value.trim(),debt:+cDebt.value||0});cName.value=cPhone.value=cDebt.value="";save()}
+function payDebt(id){let c=db.clients.find(x=>x.id===id),v=+prompt("Montant payé",c.debt)||0;c.debt=Math.max(0,c.debt-v);save()}
+function delClient(id){db.clients=db.clients.filter(x=>x.id!==id);save()}
+function renderClients(){document.getElementById("clientsTable").innerHTML=`<table><tr><th>Nom</th><th>Téléphone</th><th>Dette</th><th>Actions</th></tr>${db.clients.map(c=>`<tr><td>${c.name}</td><td>${c.phone}</td><td>${money(c.debt)}</td><td><button onclick="payDebt('${c.id}')">Paiement</button> <button onclick="delClient('${c.id}')">×</button></td></tr>`).join("")}</table>`}
+function addSupplier(){let n=fName.value.trim();if(!n)return;db.suppliers.push({id:crypto.randomUUID(),name:n,phone:fPhone.value.trim()});fName.value=fPhone.value="";save()}
+function delSupplier(id){db.suppliers=db.suppliers.filter(x=>x.id!==id);save()}
+function renderSuppliers(){document.getElementById("suppliersTable").innerHTML=`<table><tr><th>Nom</th><th>Téléphone</th><th></th></tr>${db.suppliers.map(s=>`<tr><td>${s.name}</td><td>${s.phone}</td><td><button onclick="delSupplier('${s.id}')">×</button></td></tr>`).join("")}</table>`}
+function renderDashboard(){let today=new Date().toISOString().slice(0,10),sales=db.sales.filter(s=>s.date.slice(0,10)===today);let ca=sales.reduce((a,s)=>a+s.total,0),profit=sales.reduce((a,s)=>a+s.items.reduce((z,c)=>{let p=db.products.find(x=>x.id===c.id);return z+(p?(p.sell-p.buy)*c.qty:0)},0),0);caEl.textContent=money(ca);profitEl.textContent=money(profit);salesCountEl.textContent=sales.length;productCountEl.textContent=db.products.length}
+function renderAll(){renderDashboard();renderStock();renderClients();renderSuppliers();renderCart();renderSuggestions()}
+function exportData(){let blob=new Blob([JSON.stringify(db,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="ma-bibliotheque-backup.json";a.click()}
+function importData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{db=JSON.parse(r.result);save();alert("Import terminé.")}catch{alert("Fichier invalide.")}};r.readAsText(f)}
+function resetAll(){if(confirm("Effacer toutes les données ?")){localStorage.removeItem(KEY);location.reload()}}
+const caEl=document.getElementById("ca"),profitEl=document.getElementById("profit"),salesCountEl=document.getElementById("salesCount"),productCountEl=document.getElementById("productCount");
+renderAll();
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+document.getElementById("barcode").addEventListener("keydown",e=>{if(e.key==="Enter")addByBarcode()});
+</script>
+</body>
+</html>
