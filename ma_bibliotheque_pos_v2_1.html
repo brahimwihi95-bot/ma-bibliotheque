@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ma Bibliothèque POS — V2</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#f5f7fb;color:#172033}
+button,input,select{font:inherit}button{border:0;border-radius:10px;padding:10px 14px;cursor:pointer}
+.app{display:flex;min-height:100vh}.side{width:235px;background:#111827;color:white;position:fixed;inset:0 auto 0 0;padding:18px}.logo{font-size:20px;font-weight:800;margin:6px 4px 25px}.logo small{display:block;color:#9ca3af;font-size:11px;margin-top:5px}.nav button{width:100%;background:transparent;color:#d1d5db;text-align:left;margin:3px 0}.nav button.active,.nav button:hover{background:#1f2937;color:white}.main{margin-left:235px;width:calc(100% - 235px);padding:24px}.head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.head h1{margin:0;font-size:25px}.status{background:#dcfce7;color:#166534;border-radius:99px;padding:7px 11px;font-size:12px;font-weight:700}
+.page{display:none}.page.active{display:block}.cards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}.card,.panel{background:white;border:1px solid #e5e7eb;border-radius:16px}.card{padding:16px}.label{font-size:12px;color:#6b7280}.num{font-size:24px;font-weight:800;margin-top:7px}.panel{padding:17px;margin-top:15px}.panel h2{font-size:17px;margin:0 0 14px}.grid2{display:grid;grid-template-columns:1.2fr .8fr;gap:15px}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:13px}.input,.select{border:1px solid #d1d5db;background:#fff;border-radius:10px;padding:10px 12px}.primary{background:#2563eb;color:white}.green{background:#16a34a;color:white}.red{background:#dc2626;color:white}.gray{background:#f3f4f6;color:#374151}.purple{background:#7c3aed;color:white}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:10px;border-bottom:1px solid #eef0f3;text-align:left;font-size:13px}.table th{color:#6b7280}.wrap{overflow:auto}.pos{display:grid;grid-template-columns:1.35fr .65fr;gap:15px}.products{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-height:67vh;overflow:auto}.prod{background:white;border:1px solid #e5e7eb;border-radius:13px;padding:13px;text-align:left}.prod:hover{border-color:#2563eb}.prod b{display:block}.prod small{color:#6b7280;display:block;margin-top:5px}.prod .price{font-weight:800;margin-top:8px}.cartrow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:11px 0;border-bottom:1px solid #eee}.qty button{padding:4px 8px;background:#f3f4f6}.total{display:flex;justify-content:space-between;font-size:24px;font-weight:900;margin:17px 0}.empty{text-align:center;color:#6b7280;padding:28px}.low{color:#b45309;font-weight:700}.out{color:#dc2626;font-weight:700}.modal{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;padding:18px;z-index:20}.modal.show{display:flex}.box{background:#fff;border-radius:18px;padding:20px;width:min(650px,100%);max-height:90vh;overflow:auto}.form{display:grid;grid-template-columns:1fr 1fr;gap:11px}.fg{display:flex;flex-direction:column;gap:5px}.fg.full{grid-column:1/-1}.fg label{font-size:12px;color:#6b7280}.fg input,.fg select{padding:10px;border:1px solid #d1d5db;border-radius:10px}.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}.pill{display:inline-block;border-radius:99px;padding:4px 8px;font-size:11px;background:#eef2ff;color:#3730a3}.dangerpill{background:#fee2e2;color:#991b1b}.successpill{background:#dcfce7;color:#166534}
+@media(max-width:1000px){.cards{grid-template-columns:repeat(3,1fr)}.grid2,.pos{grid-template-columns:1fr}.products{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:650px){.side{width:68px}.logo{font-size:0}.logo small{display:none}.nav button{font-size:0;text-align:center}.main{margin-left:68px;width:calc(100% - 68px);padding:12px}.cards{grid-template-columns:1fr 1fr}.products{grid-template-columns:1fr}.form{grid-template-columns:1fr}.fg.full{grid-column:auto}}
+
+/* V2.1 mobile/PC improvements */
+*{ -webkit-tap-highlight-color:transparent }
+html,body{width:100%;min-width:0;overflow-x:hidden}
+body{overscroll-behavior-x:none}
+@media (max-width:1100px){
+  .side{width:76px;padding:12px 9px}
+  .logo{font-size:0;text-align:center;margin:6px 0 20px}
+  .logo:before{content:"📚";font-size:25px}
+  .logo small{display:none}
+  .nav button{font-size:0;text-align:center;padding:12px 5px}
+  .nav button:first-letter{font-size:20px}
+  .main{margin-left:76px;width:calc(100% - 76px);padding:18px}
+  .cards{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width:720px){
+  .side{position:fixed;z-index:50;width:0;padding:0;overflow:hidden;transition:.2s}
+  .side.open{width:245px;padding:18px}
+  .side.open .logo{font-size:20px;text-align:left}
+  .side.open .logo:before{display:none}
+  .side.open .logo small{display:block}
+  .side.open .nav button{font-size:15px;text-align:left;padding:11px 12px}
+  .main{margin-left:0;width:100%;padding:12px}
+  .head{gap:8px;align-items:center}
+  .head h1{font-size:21px}
+  .status{font-size:10px;padding:6px 8px}
+  .mobile-menu{display:inline-flex!important}
+  .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .card{padding:13px;border-radius:13px}
+  .num{font-size:21px}
+  .grid2,.pos{grid-template-columns:1fr}
+  .products{grid-template-columns:repeat(2,minmax(0,1fr));max-height:none}
+  .panel{padding:13px;margin-top:11px}
+  .toolbar{display:grid;grid-template-columns:1fr 1fr}
+  .toolbar .input,.toolbar .select{width:100%;min-width:0}
+  .toolbar button,.toolbar label{width:100%;min-height:44px}
+  #scan{grid-column:1/-1}
+  .pos .panel:last-child{position:sticky;bottom:8px;z-index:5;box-shadow:0 8px 30px #0002}
+  .table{min-width:650px}
+  .wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .form{grid-template-columns:1fr}
+  .fg.full{grid-column:auto}
+  .box{padding:16px;border-radius:15px}
+}
+@media (max-width:430px){
+  .cards{grid-template-columns:1fr 1fr}
+  .products{grid-template-columns:1fr 1fr}
+  .prod{padding:11px}
+  .prod b{font-size:13px}
+  .prod small{font-size:10px}
+  .prod .price{font-size:14px}
+  .head h1{font-size:19px}
+  .toolbar{grid-template-columns:1fr}
+}
+.mobile-menu{display:none;background:#111827;color:#fff;border-radius:10px;padding:9px 12px;font-size:20px}
+.overlay{display:none;position:fixed;inset:0;background:#0006;z-index:40}
+@media(max-width:720px){.overlay.show{display:block}}
+
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="side">
+<div class="logo">📚 Ma Bibliothèque<small>POS • Stock • Clients • Fournisseurs</small></div>
+<div class="nav">
+<button class="active" data-page="dash">📊 Dashboard</button>
+<button data-page="pos">🧾 Caisse</button>
+<button data-page="stock">📦 Stock</button>
+<button data-page="clients">👥 Clients / Dettes</button>
+<button data-page="suppliers">🚚 Fournisseurs</button>
+</div>
+</aside>
+<div id="overlay" class="overlay" onclick="toggleMenu(false)"></div>
+<main class="main">
+<div class="head"><button class="mobile-menu" onclick="toggleMenu()">☰</button><h1 id="title">Dashboard</h1><span class="status">● Données locales</span></div>
+
+<section id="dash" class="page active">
+<div class="cards">
+<div class="card"><div class="label">CA aujourd'hui</div><div class="num" id="caToday">0 DH</div></div>
+<div class="card"><div class="label">Bénéfice estimé</div><div class="num" id="profitToday">0 DH</div></div>
+<div class="card"><div class="label">Ventes</div><div class="num" id="salesToday">0</div></div>
+<div class="card"><div class="label">Produits</div><div class="num" id="productsCount">0</div></div>
+<div class="card"><div class="label">Dettes clients</div><div class="num" id="debtTotal">0 DH</div></div>
+</div>
+<div class="grid2">
+<div class="panel"><h2>Dernières ventes</h2><div class="wrap"><table class="table"><thead><tr><th>Date</th><th>Ticket</th><th>Client</th><th>Total</th><th>Bénéfice</th></tr></thead><tbody id="salesTable"></tbody></table></div></div>
+<div class="panel"><h2>Alertes stock</h2><div id="alerts"></div></div>
+</div>
+</section>
+
+<section id="pos" class="page">
+<div class="toolbar">
+<input id="scan" class="input" placeholder="🔎 Scanner / code-barres">
+<input id="find" class="input" placeholder="Rechercher produit...">
+<select id="payType" class="select"><option>Espèces</option><option>Carte</option><option>Crédit</option></select>
+<button class="gray" onclick="clearCart()">Vider</button>
+</div>
+<div class="pos">
+<div class="panel"><h2>Produits</h2><div id="products" class="products"></div></div>
+<div class="panel"><h2>Panier</h2><div id="cart"></div><div class="total"><span>Total</span><span id="total">0.00 DH</span></div>
+<select id="clientSelect" class="select" style="width:100%;margin-bottom:8px"><option value="">Client comptant</option></select>
+<button class="green" style="width:100%;font-size:16px" onclick="checkout()">💰 Encaisser</button>
+<button class="purple" style="width:100%;margin-top:8px" onclick="printLast()">🖨️ Imprimer dernier ticket</button>
+</div>
+</div>
+</section>
+
+<section id="stock" class="page">
+<div class="toolbar"><input id="stockFind" class="input" placeholder="Rechercher produit / code..."><button class="primary" onclick="openProduct()">＋ Produit</button><button class="gray" onclick="exportData()">⬇ Sauvegarde</button><label class="gray" style="display:inline-flex;align-items:center">⬆ Import<input type="file" accept=".json" onchange="importData(event)" hidden></label></div>
+<div class="panel"><div class="wrap"><table class="table"><thead><tr><th>Produit</th><th>Code</th><th>Prix achat</th><th>Prix vente</th><th>Stock</th><th>Seuil</th><th>Action</th></tr></thead><tbody id="stockTable"></tbody></table></div></div>
+</section>
+
+<section id="clients" class="page">
+<div class="toolbar"><button class="primary" onclick="openClient()">＋ Client</button></div>
+<div class="panel"><div class="wrap"><table class="table"><thead><tr><th>Client</th><th>Téléphone</th><th>Dette</th><th>Action</th></tr></thead><tbody id="clientTable"></tbody></table></div></div>
+</section>
+
+<section id="suppliers" class="page">
+<div class="toolbar"><button class="primary" onclick="openSupplier()">＋ Fournisseur</button></div>
+<div class="panel"><div class="wrap"><table class="table"><thead><tr><th>Fournisseur</th><th>Téléphone</th><th>Notes</th><th>Action</th></tr></thead><tbody id="supplierTable"></tbody></table></div></div>
+</section>
+</main></div>
+
+<div id="modal" class="modal"><div class="box"><div style="display:flex;justify-content:space-between;align-items:center"><h2 id="mtitle">Produit</h2><button class="gray" onclick="closeModal()">✕</button></div><div id="mcontent"></div></div></div>
+
+<script>
+const KEY='bibliotheque_v2';
+let S=JSON.parse(localStorage.getItem(KEY)||'null')||{
+ products:[
+ {id:1,name:'Cahier 100 pages',barcode:'6110000000012',cat:'Papeterie',buy:7,sell:12,stock:30,threshold:5},
+ {id:2,name:'Stylo bleu',barcode:'6110000000029',cat:'Papeterie',buy:2,sell:4,stock:60,threshold:10},
+ {id:3,name:'Roman',barcode:'6110000000036',cat:'Livres',buy:28,sell:45,stock:8,threshold:2}
+ ],
+ clients:[{id:1,name:'Client exemple',phone:'',debt:0}],
+ suppliers:[],
+ sales:[]
+};
+let cart=[],lastTicket=null;
+
+const $=id=>document.getElementById(id);
+function save(){localStorage.setItem(KEY,JSON.stringify(S))}
+function money(x){return Number(x||0).toFixed(2)+' DH'}
+function day(){return new Date().toISOString().slice(0,10)}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function page(p){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));$(p).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===p));$('title').textContent={dash:'Dashboard',pos:'Caisse',stock:'Stock',clients:'Clients / Dettes',suppliers:'Fournisseurs'}[p];renderAll()}
+document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>page(b.dataset.page));
+
+function renderDash(){
+ const sales=S.sales.filter(x=>x.date.slice(0,10)===day());
+ const ca=sales.reduce((a,x)=>a+x.total,0), pr=sales.reduce((a,x)=>a+x.profit,0);
+ $('caToday').textContent=money(ca);$('profitToday').textContent=money(pr);$('salesToday').textContent=sales.length;$('productsCount').textContent=S.products.length;$('debtTotal').textContent=money(S.clients.reduce((a,c)=>a+c.debt,0));
+ $('salesTable').innerHTML=S.sales.slice().reverse().slice(0,10).map(x=>`<tr><td>${new Date(x.date).toLocaleString('fr-FR')}</td><td>${x.id}</td><td>${esc(x.client||'Comptant')}</td><td>${money(x.total)}</td><td>${money(x.profit)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Aucune vente</td></tr>';
+ const low=S.products.filter(p=>p.stock<=p.threshold);
+ $('alerts').innerHTML=low.map(p=>`<div style="padding:10px 0;border-bottom:1px solid #eee"><b>${esc(p.name)}</b><br><span class="${p.stock===0?'out':'low'}">${p.stock} en stock</span></div>`).join('')||'<div class="empty">Aucune alerte 👍</div>';
+}
+function renderPOS(){
+ const q=($('find')?.value||'').toLowerCase();
+ const arr=S.products.filter(p=>(p.name+' '+p.barcode+' '+p.cat).toLowerCase().includes(q));
+ $('products').innerHTML=arr.map(p=>`<button class="prod" onclick="add(${p.id})"><b>${esc(p.name)}</b><small>${esc(p.barcode||'Sans code')} • Stock: ${p.stock}</small><div class="price">${money(p.sell)}</div></button>`).join('')||'<div class="empty">Aucun produit</div>';
+ $('clientSelect').innerHTML='<option value="">Client comptant</option>'+S.clients.map(c=>`<option value="${c.id}">${esc(c.name)}${c.debt>0?' — dette '+money(c.debt):''}</option>`).join('');
+ const total=cart.reduce((a,x)=>a+x.sell*x.qty,0);
+ $('cart').innerHTML=cart.map(x=>`<div class="cartrow"><div><b>${esc(x.name)}</b><br><small>${money(x.sell)} × ${x.qty}</small></div><div class="qty"><button onclick="qty(${x.id},-1)">−</button><b>${x.qty}</b><button onclick="qty(${x.id},1)">+</button></div><b>${money(x.sell*x.qty)}</b></div>`).join('')||'<div class="empty">Panier vide</div>';
+ $('total').textContent=money(total);
+}
+function add(id){const p=S.products.find(x=>x.id===id);if(!p||p.stock<=0)return alert('Stock épuisé');let x=cart.find(x=>x.id===id);if(x){if(x.qty<p.stock)x.qty++;else return alert('Stock insuffisant')}else cart.push({id:p.id,name:p.name,sell:p.sell,qty:1});renderPOS()}
+function qty(id,d){let x=cart.find(x=>x.id===id),p=S.products.find(x=>x.id===id);if(!x)return;x.qty+=d;if(x.qty<=0)cart=cart.filter(y=>y.id!==id);if(x.qty>p.stock)x.qty=p.stock;renderPOS()}
+function clearCart(){cart=[];renderPOS()}
+function checkout(){
+ if(!cart.length)return alert('Panier vide');
+ const total=cart.reduce((a,x)=>a+x.sell*x.qty,0), type=$('payType').value, cid=Number($('clientSelect').value||0);
+ let received=total;
+ if(type==='Espèces'){received=Number(prompt('Total '+money(total)+'\nMontant reçu:',total));if(!Number.isFinite(received)||received<total)return alert('Montant insuffisant')}
+ if(type==='Crédit'&&!cid)return alert('Choisis un client pour une vente à crédit');
+ let profit=0;cart.forEach(x=>{let p=S.products.find(p=>p.id===x.id);p.stock-=x.qty;profit+=(p.sell-p.buy)*x.qty});
+ const c=S.clients.find(x=>x.id===cid);
+ if(type==='Crédit'&&c)c.debt+=total;
+ const id='T'+Date.now().toString().slice(-8);
+ lastTicket={id,date:new Date(),items:cart.map(x=>({...x})),total,profit,client:c?.name||'Comptant',type};
+ S.sales.push({...lastTicket,date:new Date().toISOString()});save();
+ alert('Vente enregistrée ✓\\nTicket: '+id+(type==='Espèces'?'\\nMonnaie: '+money(received-total):''));
+ cart=[];renderAll();
+}
+function printLast(){
+ if(!lastTicket){return alert('Aucun ticket récent dans cette session.')}
+ const w=window.open('','_blank','width=380,height=600');if(!w)return;
+ w.document.write(`<html><head><title>${lastTicket.id}</title><style>body{font-family:monospace;width:280px;margin:15px}h2{text-align:center}hr{border:0;border-top:1px dashed #000}.r{display:flex;justify-content:space-between;margin:6px 0}.t{font-weight:bold;font-size:18px}</style></head><body><h2>MA BIBLIOTHÈQUE</h2><div style="text-align:center">${lastTicket.id}<br>${new Date(lastTicket.date).toLocaleString('fr-FR')}</div><hr>${lastTicket.items.map(x=>`<div>${esc(x.name)}<div class="r"><span>${x.qty} x ${money(x.sell)}</span><span>${money(x.qty*x.sell)}</span></div></div>`).join('')}<hr><div class="r t"><span>TOTAL</span><span>${money(lastTicket.total)}</span></div><div>Client: ${esc(lastTicket.client)}<br>Paiement: ${esc(lastTicket.type)}</div><hr><div style="text-align:center">Merci pour votre visite</div><script>window.print()<\/script></body></html>`);w.document.close();
+}
+function renderStock(){
+ const q=($('stockFind')?.value||'').toLowerCase();
+ const arr=S.products.filter(p=>(p.name+' '+p.barcode+' '+p.cat).toLowerCase().includes(q));
+ $('stockTable').innerHTML=arr.map(p=>`<tr><td><b>${esc(p.name)}</b><br><small>${esc(p.cat||'')}</small></td><td>${esc(p.barcode||'—')}</td><td>${money(p.buy)}</td><td>${money(p.sell)}</td><td class="${p.stock===0?'out':p.stock<=p.threshold?'low':''}">${p.stock}</td><td>${p.threshold}</td><td><button class="primary" onclick="openProduct(${p.id})">Modifier</button> <button class="red" onclick="delProduct(${p.id})">Suppr.</button></td></tr>`).join('')||'<tr><td colspan="7" class="empty">Aucun produit</td></tr>';
+}
+function renderClients(){$('clientTable').innerHTML=S.clients.map(c=>`<tr><td><b>${esc(c.name)}</b></td><td>${esc(c.phone||'—')}</td><td class="${c.debt>0?'low':''}">${money(c.debt)}</td><td><button class="green" onclick="payDebt(${c.id})">Règlement</button> <button class="primary" onclick="openClient(${c.id})">Modifier</button></td></tr>`).join('')||'<tr><td colspan="4" class="empty">Aucun client</td></tr>'}
+function renderSuppliers(){$('supplierTable').innerHTML=S.suppliers.map(s=>`<tr><td><b>${esc(s.name)}</b></td><td>${esc(s.phone||'—')}</td><td>${esc(s.note||'')}</td><td><button class="primary" onclick="openSupplier(${s.id})">Modifier</button> <button class="red" onclick="delSupplier(${s.id})">Suppr.</button></td></tr>`).join('')||'<tr><td colspan="4" class="empty">Aucun fournisseur</td></tr>'}
+function toggleMenu(force){
+ const side=document.querySelector('.side'), overlay=document.getElementById('overlay');
+ const open=force===undefined?!side.classList.contains('open'):force;
+ side.classList.toggle('open',open);
+ overlay.classList.toggle('show',open);
+}
+document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>toggleMenu(false)));
+function renderAll(){renderDash();renderPOS();renderStock();renderClients();renderSuppliers()}
+
+function modal(title,body){$('mtitle').textContent=title;$('mcontent').innerHTML=body;$('modal').classList.add('show')}
+function closeModal(){$('modal').classList.remove('show')}
+function openProduct(id){
+ const p=id&&S.products.find(x=>x.id===id);
+ modal(p?'Modifier produit':'Ajouter produit',`<form onsubmit="saveProduct(event,${id||0})"><div class="form">
+ <div class="fg full"><label>Nom *</label><input id="pn" required value="${esc(p?.name||'')}"></div>
+ <div class="fg"><label>Code-barres</label><input id="pb" value="${esc(p?.barcode||'')}"></div>
+ <div class="fg"><label>Catégorie</label><input id="pc" value="${esc(p?.cat||'')}"></div>
+ <div class="fg"><label>Prix achat (DH)</label><input id="pbu" type="number" step=".01" value="${p?.buy??0}"></div>
+ <div class="fg"><label>Prix vente (DH) *</label><input id="ps" type="number" step=".01" required value="${p?.sell??0}"></div>
+ <div class="fg"><label>Stock *</label><input id="pst" type="number" min="0" required value="${p?.stock??0}"></div>
+ <div class="fg"><label>Seuil</label><input id="pth" type="number" min="0" value="${p?.threshold??5}"></div></div>
+ <div class="actions"><button type="button" class="gray" onclick="closeModal()">Annuler</button><button class="primary">Enregistrer</button></div></form>`);
+}
+function saveProduct(e,id){e.preventDefault();const p={id:id||Date.now(),name:$('pn').value.trim(),barcode:$('pb').value.trim(),cat:$('pc').value.trim(),buy:Number($('pbu').value),sell:Number($('ps').value),stock:Number($('pst').value),threshold:Number($('pth').value)};if(p.barcode&&S.products.some(x=>x.barcode===p.barcode&&x.id!==p.id))return alert('Code-barres déjà utilisé');if(id)S.products[S.products.findIndex(x=>x.id===id)]=p;else S.products.push(p);save();closeModal();renderAll()}
+function delProduct(id){if(confirm('Supprimer ce produit ?')){S.products=S.products.filter(x=>x.id!==id);save();renderAll()}}
+
+function openClient(id){
+ const c=id&&S.clients.find(x=>x.id===id);
+ modal(c?'Modifier client':'Ajouter client',`<form onsubmit="saveClient(event,${id||0})"><div class="form"><div class="fg full"><label>Nom *</label><input id="cn" required value="${esc(c?.name||'')}"></div><div class="fg"><label>Téléphone</label><input id="cp" value="${esc(c?.phone||'')}"></div></div><div class="actions"><button type="button" class="gray" onclick="closeModal()">Annuler</button><button class="primary">Enregistrer</button></div></form>`)
+}
+function saveClient(e,id){e.preventDefault();const c={id:id||Date.now(),name:$('cn').value.trim(),phone:$('cp').value.trim(),debt:id?(S.clients.find(x=>x.id===id)?.debt||0):0};if(id)S.clients[S.clients.findIndex(x=>x.id===id)]=c;else S.clients.push(c);save();closeModal();renderAll()}
+function payDebt(id){const c=S.clients.find(x=>x.id===id);if(!c||c.debt<=0)return alert('Aucune dette');const n=Number(prompt('Dette actuelle: '+money(c.debt)+'\\nMontant payé:',c.debt));if(!Number.isFinite(n)||n<=0)return;c.debt=Math.max(0,c.debt-n);save();renderAll()}
+
+function openSupplier(id){
+ const s=id&&S.suppliers.find(x=>x.id===id);
+ modal(s?'Modifier fournisseur':'Ajouter fournisseur',`<form onsubmit="saveSupplier(event,${id||0})"><div class="form"><div class="fg"><label>Nom *</label><input id="sn" required value="${esc(s?.name||'')}"></div><div class="fg"><label>Téléphone</label><input id="sp" value="${esc(s?.phone||'')}"></div><div class="fg full"><label>Notes</label><input id="snote" value="${esc(s?.note||'')}"></div></div><div class="actions"><button type="button" class="gray" onclick="closeModal()">Annuler</button><button class="primary">Enregistrer</button></div></form>`)
+}
+function saveSupplier(e,id){e.preventDefault();const s={id:id||Date.now(),name:$('sn').value.trim(),phone:$('sp').value.trim(),note:$('snote').value.trim()};if(id)S.suppliers[S.suppliers.findIndex(x=>x.id===id)]=s;else S.suppliers.push(s);save();closeModal();renderAll()}
+function delSupplier(id){if(confirm('Supprimer ce fournisseur ?')){S.suppliers=S.suppliers.filter(x=>x.id!==id);save();renderAll()}}
+
+function exportData(){const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='bibliotheque-v2-backup.json';a.click()}
+function importData(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.products||!d.sales)throw 0;S=d;save();renderAll();alert('Sauvegarde importée ✓')}catch{alert('Fichier invalide')}};r.readAsText(f)}
+$('find').oninput=renderPOS;$('stockFind').oninput=renderStock;
+$('scan').onkeydown=e=>{if(e.key==='Enter'){const code=e.target.value.trim(),p=S.products.find(x=>String(x.barcode)===code);if(p)add(p.id);else alert('Code-barres introuvable');e.target.value=''}};
+renderAll();
+</script>
+</body>
+</html>
